@@ -29,6 +29,7 @@
 
 #ifdef G_OS_WIN32
 #include <windows.h>
+#include <wctype.h>
 
 static void
 gnc_lconv_set_utf8 (char **p_value, wchar_t *w_value, const char *default_value)
@@ -70,6 +71,19 @@ get_lconv_wide_val (LCTYPE lctype)
     {
         buffer[0] &= 0x0f; // The standard localeconv is a single uint8
         buffer[1] = '\0';
+    }
+    else if (lctype == LOCALE_STHOUSAND || lctype == LOCALE_SMONTHOUSANDSEP ||
+             lctype == LOCALE_SDECIMAL || lctype == LOCALE_SMONDECIMALSEP)
+    {
+        wchar_t *p = buffer;
+        while (*p)
+        {
+            if (iswspace((wint_t)*p))
+            {
+                *p = L' '; // Strip non-breaking spaces to avoid UI rendering bugs like 'Â'
+            }
+            p++;
+        }
     }
     return buffer;
 }
